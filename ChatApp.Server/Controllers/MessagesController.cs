@@ -1,9 +1,7 @@
 using ChatApp.Core;
 using ChatApp.Server.Data;
-using ChatApp.Server.Hubs;
-using ChatApp.Server.Models;
+using ChatApp.Server.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatApp.Server.Controllers
@@ -13,12 +11,12 @@ namespace ChatApp.Server.Controllers
     public class MessagesController : ControllerBase
     {
         private readonly ChatDbContext _db;
-        private readonly IHubContext<ChatHub> _hub;
+        private readonly ChatMessageService _messages;
 
-        public MessagesController(ChatDbContext db, IHubContext<ChatHub> hub)
+        public MessagesController(ChatDbContext db, ChatMessageService messages)
         {
             _db = db;
-            _hub = hub;
+            _messages = messages;
         }
 
         /// <summary>Returns the most recent messages, oldest first, ready to render.</summary>
@@ -49,29 +47,11 @@ namespace ChatApp.Server.Controllers
             if (string.IsNullOrWhiteSpace(request.Content))
                 return BadRequest("Message content is required.");
 
-            var user = await _db.Users.FindAsync(request.UserId);
-            if (user is null)
+            var sent = await _messages.SendAsync(request.UserId, request.Content);
+            if (sent is null)
                 return NotFound($"User {request.UserId} does not exist.");
 
-            var message = new Message
-            {
-                UserId = user.Id,
-                Content = request.Content,
-                SentAt = DateTime.UtcNow
-            };
-
-            _db.Messages.Add(message);
-            await _db.SaveChangesAsync();
-
-            var dto = new ChatMessage
-            {
-                Username = user.Username,
-                Content = message.Content,
-                SentAt = message.SentAt
-            };
-
-            await _hub.Clients.All.SendAsync("ReceiveMessage", dto);
-            return dto;
+            return sent;
         }
     }
 

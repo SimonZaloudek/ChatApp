@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ChatApp.Server.Data;
 using ChatApp.Server.Hubs;
+using ChatApp.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
