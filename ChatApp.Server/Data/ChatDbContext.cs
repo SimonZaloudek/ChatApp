@@ -3,6 +3,7 @@ using ChatApp.Server.Models;
 
 namespace ChatApp.Server.Data
 {
+    // The ChatDbContext class represents the database context for the chat application.
     public class ChatDbContext : DbContext
     {
         public ChatDbContext(DbContextOptions<ChatDbContext> options) : base(options)
