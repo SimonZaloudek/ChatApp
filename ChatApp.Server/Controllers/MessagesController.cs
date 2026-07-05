@@ -1,7 +1,9 @@
 using ChatApp.Core;
 using ChatApp.Server.Data;
+using ChatApp.Server.Hubs;
 using ChatApp.Server.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatApp.Server.Controllers
@@ -11,10 +13,12 @@ namespace ChatApp.Server.Controllers
     public class MessagesController : ControllerBase
     {
         private readonly ChatDbContext _db;
+        private readonly IHubContext<ChatHub> _hub;
 
-        public MessagesController(ChatDbContext db)
+        public MessagesController(ChatDbContext db, IHubContext<ChatHub> hub)
         {
             _db = db;
+            _hub = hub;
         }
 
         /// <summary>Returns the most recent messages, oldest first, ready to render.</summary>
@@ -59,12 +63,15 @@ namespace ChatApp.Server.Controllers
             _db.Messages.Add(message);
             await _db.SaveChangesAsync();
 
-            return new ChatMessage
+            var dto = new ChatMessage
             {
                 Username = user.Username,
                 Content = message.Content,
                 SentAt = message.SentAt
             };
+
+            await _hub.Clients.All.SendAsync("ReceiveMessage", dto);
+            return dto;
         }
     }
 
