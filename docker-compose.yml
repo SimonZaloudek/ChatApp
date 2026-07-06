@@ -1,0 +1,18 @@
+# Development database for ChatApp.
+# Start with:  docker compose up -d
+# The server connects with:
+#   server=localhost;port=3306;user=root;password=chatapp-dev;database=chatapp
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: chatapp-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: chatapp-dev
+      MYSQL_DATABASE: chatapp
+    ports:
+      - "3306:3306"
+    volumes:
+      - chatapp-mysql-data:/var/lib/mysql
+
+volumes:
+  chatapp-mysql-data:
